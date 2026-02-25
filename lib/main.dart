@@ -16,9 +16,10 @@ class _MathAppState extends State<MathApp> {
   String screen = 'start';
   String operation = "Сложение";
   String difficulty = "Легко";
-  String currentLang = "RU"; 
+  String currentLang = "RU";
 
-  // Словарь переводов
+  final List<String> kittenEmojis = ["🐱", "😺", "😽", "🐈", "🐾"];
+
   final Map<String, Map<String, String>> localizedText = {
     "RU": {
       "title": "ПОМОГИ КОТЕНКУ",
@@ -28,14 +29,20 @@ class _MathAppState extends State<MathApp> {
       "steps": "Осталось шагов: ",
       "win": "СЕМЬЯ ВМЕСТЕ!",
       "again": "ИГРАТЬ СНОВА",
-      "lang": "Язык",
-      "Сложение": "Сложение",
-      "Вычитание": "Вычитание",
-      "Умножение": "Умножение",
-      "Деление": "Деление",
-      "Легко": "Легко",
-      "Средне": "Средне",
-      "Сложно": "Сложно",
+      "correct_is": "Правильный ответ: ",
+      "next": "ДАЛЬШЕ",
+      "exit_msg": "Ты отлично потрудился сегодня! Котенок желает тебе больших успехов! ✨",
+      "bye": "В МЕНЮ",
+      "continue": "ПРОДОЛЖИТЬ",
+      "menu": "🏠 МЕНЮ",
+      "exit": "ВЫХОД",
+      "support1": "Ты молодец! Котенок видит, как ты стараешься!",
+      "support2": "У тебя обязательно получится, нужно еще чуть-чуть практики!",
+      "support3": "Ошибаться — это нормально. Котенок гордится тобой!",
+      "support4": "Почти в точку! Еще один шаг и ты мастер!",
+      "support5": "Ничего страшного! Котенок поддерживает тебя!",
+      "Сложение": "Сложение", "Вычитание": "Вычитание", "Умножение": "Умножение", "Деление": "Деление",
+      "Легко": "Легко", "Средне": "Средне", "Сложно": "Сложно",
     },
     "EN": {
       "title": "HELP THE KITTEN",
@@ -45,31 +52,20 @@ class _MathAppState extends State<MathApp> {
       "steps": "Steps left: ",
       "win": "FAMILY REUNITED!",
       "again": "PLAY AGAIN",
-      "lang": "Language",
-      "Сложение": "Addition",
-      "Вычитание": "Subtraction",
-      "Умножение": "Multiplication",
-      "Деление": "Division",
-      "Легко": "Easy",
-      "Средне": "Medium",
-      "Сложно": "Hard",
-    },
-    "ZH": {
-      "title": "帮助小猫",
-      "subtitle": "选择运算:",
-      "diff": "难度:",
-      "start": "开始游戏",
-      "steps": "剩余步数: ",
-      "win": "团圆了!",
-      "again": "再玩一次",
-      "lang": "语言",
-      "Сложение": "加法",
-      "Вычитание": "减法",
-      "Умножение": "乘法",
-      "Деление": "除法",
-      "Легко": "简单",
-      "Средне": "普通",
-      "Сложно": "困难",
+      "correct_is": "Correct answer: ",
+      "next": "NEXT",
+      "exit_msg": "You did a great job today! The kitten wishes you much success! ✨",
+      "bye": "TO MENU",
+      "continue": "CONTINUE",
+      "menu": "🏠 MENU",
+      "exit": "EXIT",
+      "support1": "Well done! The kitten sees how hard you are trying!",
+      "support2": "You can do it, just a little more practice!",
+      "support3": "It's okay to make mistakes. The kitten is proud of you!",
+      "support4": "Almost there! One more step and you're a master!",
+      "support5": "Don't worry! The kitten is cheering for you!",
+      "Сложение": "Addition", "Вычитание": "Subtraction", "Умножение": "Multiplication", "Деление": "Division",
+      "Легко": "Easy", "Средне": "Medium", "Сложно": "Hard",
     }
   };
 
@@ -99,22 +95,25 @@ class _MathAppState extends State<MathApp> {
 
   void generateExample() {
     var rng = Random();
-    int maxRange = (difficulty == "Легко") ? 10 : (difficulty == "Средне" ? 31 : 101);
+    int range1 = (difficulty == "Легко") ? 10 : (difficulty == "Средне" ? 31 : 101);
     
-    if (operation == "Деление") {
-      num2 = rng.nextInt(maxRange - 1) + 1; 
-      int answer = rng.nextInt(maxRange);
-      num1 = num2 * answer; 
-    } else if (operation == "Умножение") {
-      num1 = rng.nextInt(maxRange);
-      num2 = rng.nextInt(maxRange);
+    if (operation == "Умножение" || operation == "Деление") {
+      num2 = rng.nextInt(10); 
+      if (operation == "Деление") {
+        if (num2 == 0) num2 = 1;
+        int answer = rng.nextInt(range1);
+        num1 = num2 * answer;
+      } else {
+        num1 = rng.nextInt(range1);
+      }
     } else {
-      num1 = rng.nextInt(maxRange);
-      num2 = rng.nextInt(maxRange);
+      num1 = rng.nextInt(range1);
+      num2 = rng.nextInt(range1);
       if (operation == "Вычитание" && num1 < num2) {
         int temp = num1; num1 = num2; num2 = temp;
       }
     }
+
     int correctAnswer = getCorrectAnswer();
     Set<int> variants = {correctAnswer};
     while (variants.length < 4) {
@@ -122,24 +121,96 @@ class _MathAppState extends State<MathApp> {
       int fake = rng.nextBool() ? correctAnswer + offset : (correctAnswer - offset).abs();
       variants.add(fake);
     }
-    options = variants.toList();
-    options.shuffle();
+    options = variants.toList()..shuffle();
   }
 
-  int getCorrectAnswer() {
-    if (operation == "Сложение") return num1 + num2;
-    if (operation == "Вычитание") return num1 - num2;
-    if (operation == "Умножение") return num1 * num2;
-    if (operation == "Деление") return num1 ~/ num2;
-    return 0;
-  }
+  int getCorrectAnswer() => (operation == "Сложение") ? num1 + num2 : (operation == "Вычитание") ? num1 - num2 : (operation == "Умножение") ? num1 * num2 : (num2 == 0 ? 0 : num1 ~/ num2);
 
   String getOpSymbol() {
     if (operation == "Сложение") return "+";
     if (operation == "Вычитание") return "-";
     if (operation == "Умножение") return "×";
-    if (operation == "Деление") return "÷";
-    return "?";
+    return "÷";
+  }
+
+  void showSupportDialog() {
+    final random = Random();
+    String randomEmoji = kittenEmojis[random.nextInt(kittenEmojis.length)];
+    String randomPhrase = t("support${random.nextInt(5) + 1}");
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(randomEmoji, style: TextStyle(fontSize: 80)),
+              SizedBox(height: 20),
+              Text("${t("correct_is")} ${getCorrectAnswer()}",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
+              SizedBox(height: 15),
+              Text(randomPhrase, textAlign: TextAlign.center, style: TextStyle(fontSize: 16)),
+            ],
+          ),
+          actions: [
+            Center(
+              child: ElevatedButton(
+                style: commonButtonStyle,
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  setState(() => generateExample());
+                },
+                child: Text(t("next")),
+              ),
+            )
+          ],
+        );
+      },
+    );
+  }
+
+  void showExitDialog(bool toMenu) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("🐱✨", style: TextStyle(fontSize: 80)),
+              SizedBox(height: 20),
+              Text(t("exit_msg"), textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+            ],
+          ),
+          actions: [
+            Column(
+              children: [
+                Center(
+                  child: ElevatedButton(
+                    style: commonButtonStyle.copyWith(backgroundColor: WidgetStateProperty.all(Colors.green[400])),
+                    onPressed: () => Navigator.of(ctx).pop(), // Просто закрываем диалог
+                    child: Text(t("continue")),
+                  ),
+                ),
+                SizedBox(height: 10),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    if (toMenu) setState(() => screen = 'start');
+                  },
+                  child: Text(t("bye"), style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold)),
+                ),
+              ],
+            )
+          ],
+        );
+      },
+    );
   }
 
   void checkAnswer(int selectedAnswer) {
@@ -148,13 +219,14 @@ class _MathAppState extends State<MathApp> {
         currentTasksLeft -= 1;
         solvedCount += 1;
       });
+      if (currentTasksLeft <= 0) {
+        setState(() => screen = 'success');
+      } else {
+        generateExample();
+      }
     } else {
-      setState(() {
-        currentTasksLeft = min(currentTasksLeft + 2, 30);
-      });
+      showSupportDialog();
     }
-    if (currentTasksLeft <= 0) setState(() => screen = 'success');
-    else generateExample();
   }
 
   @override
@@ -173,7 +245,7 @@ class _MathAppState extends State<MathApp> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 20, right: 20),
+                padding: const EdgeInsets.only(bottom: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -181,45 +253,39 @@ class _MathAppState extends State<MathApp> {
                     SizedBox(width: 10),
                     DropdownButton<String>(
                       value: currentLang,
-                      underline: Container(height: 2, color: Colors.orange),
-                      onChanged: (String? newValue) {
-                        setState(() { currentLang = newValue!; });
-                      },
-                      items: <String>['RU', 'EN', 'ZH']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value, style: TextStyle(fontWeight: FontWeight.bold)),
-                        );
-                      }).toList(),
+                      onChanged: (String? val) => setState(() => currentLang = val!),
+                      items: ['RU', 'EN'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 20),
               Text(t("title"), style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.orange[900])),
-              SizedBox(height: 30),
+              SizedBox(height: 20),
               Text(t("subtitle"), style: TextStyle(fontSize: 18)),
-              SizedBox(height: 10),
               Wrap(
                 alignment: WrapAlignment.center,
                 spacing: 10, runSpacing: 10,
                 children: ["Сложение", "Вычитание", "Умножение", "Деление"].map((op) => choiceChip(op, isOp: true)).toList(),
               ),
-              SizedBox(height: 30),
+              SizedBox(height: 20),
               Text(t("diff"), style: TextStyle(fontSize: 18)),
-              SizedBox(height: 10),
               Wrap(
                 alignment: WrapAlignment.center,
                 spacing: 10,
                 children: ["Легко", "Средне", "Сложно"].map((d) => choiceChip(d, isOp: false)).toList(),
               ),
-              SizedBox(height: 50),
+              SizedBox(height: 40),
               ElevatedButton(
                 onPressed: startGame,
                 style: commonButtonStyle.copyWith(padding: WidgetStateProperty.all(EdgeInsets.symmetric(horizontal: 60, vertical: 20))),
                 child: Text(t("start")),
-              )
+              ),
+              SizedBox(height: 20),
+              TextButton.icon(
+                onPressed: () => showExitDialog(false),
+                icon: Icon(Icons.exit_to_app, color: Colors.orange[900]),
+                label: Text(t("exit"), style: TextStyle(color: Colors.orange[900], fontWeight: FontWeight.bold)),
+              ),
             ],
           ),
         ),
@@ -228,34 +294,51 @@ class _MathAppState extends State<MathApp> {
   }
 
   Widget buildGameScreen() {
-    double progress = solvedCount / (solvedCount + currentTasksLeft);
+    double progress = (solvedCount + currentTasksLeft == 0) ? 0 : solvedCount / (solvedCount + currentTasksLeft);
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: Text("${t("steps")}$currentTasksLeft"), centerTitle: true),
+      appBar: AppBar(
+        backgroundColor: Colors.orange, 
+        title: Text("${t("steps")}$currentTasksLeft"), 
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+      ),
       body: Column(
         children: [
           SizedBox(height: 20),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 40),
-            child: LinearProgressIndicator(value: progress, minHeight: 10, borderRadius: BorderRadius.circular(10)),
+            child: LinearProgressIndicator(value: progress, minHeight: 10, backgroundColor: Colors.orange[100], color: Colors.orange, borderRadius: BorderRadius.circular(10)),
           ),
           Container(
-            height: 140,
+            height: 100,
             child: Stack(
               children: [
-                Align(alignment: Alignment(0.8, 0.0), child: Text("🐈‍⬛", style: TextStyle(fontSize: 65))),
+                Align(alignment: Alignment(0.8, 0.0), child: Text("🐈‍⬛", style: TextStyle(fontSize: 50))),
                 AnimatedAlign(
                   duration: Duration(milliseconds: 600),
                   alignment: Alignment(-0.8 + (progress * 1.55), 0.0),
-                  child: Transform.flip(flipX: true, child: Text("🐈", style: TextStyle(fontSize: 45))),
+                  child: Transform.flip(flipX: true, child: Text("🐈", style: TextStyle(fontSize: 35))),
                 ),
               ],
             ),
           ),
-          Text("$num1 ${getOpSymbol()} $num2 = ?", style: TextStyle(fontSize: 55, fontWeight: FontWeight.bold)),
+          Text("$num1 ${getOpSymbol()} $num2 = ?", style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () => showExitDialog(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange[100],
+              foregroundColor: Colors.orange[900],
+              elevation: 0,
+              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))
+            ),
+            child: Text(t("menu"), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          ),
           Spacer(),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 30),
             child: Column(
               children: [
                 Row(children: [answerBtn(options[0]), SizedBox(width: 15), answerBtn(options[1])]),
@@ -287,11 +370,7 @@ class _MathAppState extends State<MathApp> {
             SizedBox(height: 20),
             Text(t("win"), style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.orange[900])),
             SizedBox(height: 50),
-            ElevatedButton(
-              onPressed: () => setState(() => screen = 'start'),
-              style: commonButtonStyle,
-              child: Text(t("again")),
-            )
+            ElevatedButton(onPressed: () => setState(() => screen = 'start'), style: commonButtonStyle, child: Text(t("again")))
           ],
         ),
       ),
@@ -301,14 +380,11 @@ class _MathAppState extends State<MathApp> {
   Widget answerBtn(int val) {
     return Expanded(
       child: SizedBox(
-        height: 65,
+        height: 70,
         child: ElevatedButton(
-          style: commonButtonStyle.copyWith(
-            backgroundColor: WidgetStateProperty.all(Colors.blue[400]),
-            foregroundColor: WidgetStateProperty.all(Colors.white),
-          ),
+          style: commonButtonStyle.copyWith(backgroundColor: WidgetStateProperty.all(Colors.blue[400])),
           onPressed: () => checkAnswer(val),
-          child: Text("$val", style: TextStyle(fontSize: 28)),
+          child: Text("$val", style: TextStyle(fontSize: 30)),
         ),
       ),
     );
@@ -317,7 +393,7 @@ class _MathAppState extends State<MathApp> {
   Widget choiceChip(String label, {required bool isOp}) {
     bool isSelected = isOp ? (operation == label) : (difficulty == label);
     return ChoiceChip(
-      label: Text(t(label)), 
+      label: Text(t(label)),
       selected: isSelected,
       selectedColor: Colors.orange,
       labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black, fontWeight: FontWeight.bold),
