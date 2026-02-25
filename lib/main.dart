@@ -52,7 +52,7 @@ class _MathAppState extends State<MathApp> {
       "steps": "Steps left: ",
       "win": "FAMILY REUNITED!",
       "again": "PLAY AGAIN",
-      "correct_is": "Correct answer: ",
+      "correct_is": "The right answer is: ",
       "next": "NEXT",
       "exit_msg": "You did a great job today! The kitten wishes you much success! ✨",
       "bye": "TO MENU",
@@ -137,6 +137,9 @@ class _MathAppState extends State<MathApp> {
     final random = Random();
     String randomEmoji = kittenEmojis[random.nextInt(kittenEmojis.length)];
     String randomPhrase = t("support${random.nextInt(5) + 1}");
+    
+    // Новое улучшение: показываем полный пример с ответом
+    String fullResult = "$num1 ${getOpSymbol()} $num2 = ${getCorrectAnswer()}";
 
     showDialog(
       context: context,
@@ -149,8 +152,9 @@ class _MathAppState extends State<MathApp> {
             children: [
               Text(randomEmoji, style: TextStyle(fontSize: 80)),
               SizedBox(height: 20),
-              Text("${t("correct_is")} ${getCorrectAnswer()}",
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
+              Text(t("correct_is"), style: TextStyle(fontSize: 16)),
+              Text(fullResult,
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.green)),
               SizedBox(height: 15),
               Text(randomPhrase, textAlign: TextAlign.center, style: TextStyle(fontSize: 16)),
             ],
@@ -193,7 +197,7 @@ class _MathAppState extends State<MathApp> {
                 Center(
                   child: ElevatedButton(
                     style: commonButtonStyle.copyWith(backgroundColor: WidgetStateProperty.all(Colors.green[400])),
-                    onPressed: () => Navigator.of(ctx).pop(), // Просто закрываем диалог
+                    onPressed: () => Navigator.of(ctx).pop(),
                     child: Text(t("continue")),
                   ),
                 ),
