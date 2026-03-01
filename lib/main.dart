@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'dart:js' as js; // Библиотека для связи с Google Analytics в index.html
 
-void main() => runApp(MaterialApp(
-      home: MathApp(),
-      theme: ThemeData(primarySwatch: Colors.orange),
-      debugShowCheckedModeBanner: false,
-    ));
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MaterialApp(
+    home: MathApp(),
+    theme: ThemeData(primarySwatch: Colors.orange),
+    debugShowCheckedModeBanner: false,
+  ));
+}
 
 class MathApp extends StatefulWidget {
   @override
@@ -15,10 +19,19 @@ class MathApp extends StatefulWidget {
 class _MathAppState extends State<MathApp> {
   String screen = 'start';
   String operation = "Сложение";
-  String difficulty = "Студент"; // Изменено значение по умолчанию
+  String difficulty = "Студент";
   String currentLang = "RU";
 
   final List<String> kittenEmojis = ["🐱", "😺", "😽", "🐈", "🐾"];
+
+  // Функция для отправки событий в Google Analytics
+  void trackEvent(String name, Map<String, dynamic> params) {
+    try {
+      js.context.callMethod('gtag', ['event', name, js.JsObject.jsify(params)]);
+    } catch (e) {
+      debugPrint("Analytics Error: $e");
+    }
+  }
 
   final Map<String, Map<String, String>> localizedText = {
     "RU": {
@@ -36,13 +49,16 @@ class _MathAppState extends State<MathApp> {
       "continue": "ПРОДОЛЖИТЬ",
       "menu": "🏠 МЕНЮ",
       "exit": "ВЫХОД",
+      "story_title": "ГДЕ ЖЕ МАМА? 🐱",
+      "story_body": "Мама-кошка ждет котенка на другой стороне детской площадки! Путь к ней зашифрован в математических задачках. Решай их правильно, чтобы котенок бежал быстрее. Помоги малышу не заблудиться!",
+      "go": "ПОЕХАЛИ!",
       "support1": "Ты молодец! Котенок видит, как ты стараешься!",
-      "support2": "У тебя обязательно получится, нужно еще чуть-чуть практики!",
-      "support3": "Ошибаться — это нормально. Котенок гордится тобой!",
-      "support4": "Почти в точку! Еще один шаг и ты мастер!",
-      "support5": "Ничего страшного! Котенок поддерживает тебя!",
+      "support2": "У тебя обязательно получится!",
+      "support3": "Ошибаться — это нормально!",
+      "support4": "Почти в точку! Еще один шаг!",
+      "support5": "Котенок поддерживает тебя!",
       "Сложение": "Сложение", "Вычитание": "Вычитание", "Умножение": "Умножение", "Деление": "Деление",
-      "Студент": "Студент", "Профессор": "Профессор", "Искусственный Интеллект": "Искусственный Интеллект",
+      "Студент": "Студент", "Профессор": "Профессор", "Искусственный Интеллект": "ИИ",
     },
     "EN": {
       "title": "HELP THE KITTEN",
@@ -54,18 +70,21 @@ class _MathAppState extends State<MathApp> {
       "again": "PLAY AGAIN",
       "correct_is": "The right answer is: ",
       "next": "NEXT",
-      "exit_msg": "You did a great job today! The kitten wishes you much success! ✨",
+      "exit_msg": "You did a great job today!",
       "bye": "TO MENU",
       "continue": "CONTINUE",
       "menu": "🏠 MENU",
       "exit": "EXIT",
-      "support1": "Well done! The kitten sees how hard you are trying!",
-      "support2": "You can do it, just a little more practice!",
-      "support3": "It's okay to make mistakes. The kitten is proud of you!",
-      "support4": "Almost there! One more step and you're a master!",
-      "support5": "Don't worry! The kitten is cheering for you!",
+      "story_title": "WHERE IS MOMMY? 🐱",
+      "story_body": "Mommy cat is waiting for the kitten on the other side of the playground! The path to her is hidden in math problems. Solve them correctly to make the kitten run faster. Help the little one find his way!",
+      "go": "LET'S GO!",
+      "support1": "Well done!",
+      "support2": "You can do it!",
+      "support3": "Mistakes are okay!",
+      "support4": "Almost there!",
+      "support5": "The kitten is cheering for you!",
       "Сложение": "Addition", "Вычитание": "Subtraction", "Умножение": "Multiplication", "Деление": "Division",
-      "Студент": "Student", "Профессор": "Professor", "Искусственный Интеллект": "A.I. Master",
+      "Студент": "Student", "Профессор": "Professor", "Искусственный Интеллект": "A.I.",
     }
   };
 
@@ -84,7 +103,48 @@ class _MathAppState extends State<MathApp> {
 
   String t(String key) => localizedText[currentLang]![key] ?? key;
 
+  void showStartStory() {
+    trackEvent('story_view', {'lang': currentLang}); // Аналитика: просмотр истории
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("🐈", style: TextStyle(fontSize: 70)),
+              SizedBox(height: 15),
+              Text(t("story_title"), style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.orange[900])),
+              SizedBox(height: 15),
+              Text(t("story_body"), textAlign: TextAlign.center, style: TextStyle(fontSize: 16)),
+            ],
+          ),
+          actions: [
+            Center(
+              child: ElevatedButton(
+                style: commonButtonStyle.copyWith(backgroundColor: WidgetStateProperty.all(Colors.green[400])),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  startGame();
+                },
+                child: Text(t("go")),
+              ),
+            )
+          ],
+        );
+      },
+    );
+  }
+
   void startGame() {
+    // Аналитика: запуск игры с параметрами
+    trackEvent('game_start', {
+      'operation': operation,
+      'difficulty': difficulty,
+      'language': currentLang
+    });
     setState(() {
       currentTasksLeft = 10;
       solvedCount = 0;
@@ -95,13 +155,11 @@ class _MathAppState extends State<MathApp> {
 
   void generateExample() {
     var rng = Random();
-    // Логика сложности: Студент (до 10), Профессор (до 30), ИИ (до 100)
     int range1 = (difficulty == "Студент") ? 10 : (difficulty == "Профессор" ? 31 : 101);
     
     if (operation == "Умножение" || operation == "Деление") {
-      num2 = rng.nextInt(10); 
+      num2 = rng.nextInt(9) + 1;
       if (operation == "Деление") {
-        if (num2 == 0) num2 = 1;
         int answer = rng.nextInt(range1);
         num1 = num2 * answer;
       } else {
@@ -152,8 +210,7 @@ class _MathAppState extends State<MathApp> {
               Text(randomEmoji, style: TextStyle(fontSize: 80)),
               SizedBox(height: 20),
               Text(t("correct_is"), style: TextStyle(fontSize: 16)),
-              Text(fullResult,
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.green)),
+              Text(fullResult, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.green)),
               SizedBox(height: 15),
               Text(randomPhrase, textAlign: TextAlign.center, style: TextStyle(fontSize: 16)),
             ],
@@ -217,17 +274,32 @@ class _MathAppState extends State<MathApp> {
   }
 
   void checkAnswer(int selectedAnswer) {
-    if (selectedAnswer == getCorrectAnswer()) {
+    int correct = getCorrectAnswer();
+    if (selectedAnswer == correct) {
+      // Аналитика: правильный ответ
+      trackEvent('answer_correct', {
+        'operation': operation,
+        'level': 10 - currentTasksLeft + 1
+      });
+
       setState(() {
         currentTasksLeft -= 1;
         solvedCount += 1;
       });
       if (currentTasksLeft <= 0) {
+        // Аналитика: победа
+        trackEvent('game_win', {'difficulty': difficulty});
         setState(() => screen = 'success');
       } else {
         generateExample();
       }
     } else {
+      // Аналитика: ошибка
+      trackEvent('answer_wrong', {
+        'operation': operation,
+        'user_choice': selectedAnswer,
+        'correct_answer': correct
+      });
       showSupportDialog();
     }
   }
@@ -257,7 +329,10 @@ class _MathAppState extends State<MathApp> {
                     SizedBox(width: 10),
                     DropdownButton<String>(
                       value: currentLang,
-                      onChanged: (String? val) => setState(() => currentLang = val!),
+                      onChanged: (String? val) {
+                        trackEvent('language_change', {'lang': val!}); // Аналитика: смена языка
+                        setState(() => currentLang = val);
+                      },
                       items: ['RU', 'EN'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
                     ),
                   ],
@@ -280,7 +355,7 @@ class _MathAppState extends State<MathApp> {
               ),
               SizedBox(height: 40),
               ElevatedButton(
-                onPressed: startGame,
+                onPressed: showStartStory,
                 style: commonButtonStyle.copyWith(padding: WidgetStateProperty.all(EdgeInsets.symmetric(horizontal: 60, vertical: 20))),
                 child: Text(t("start")),
               ),
@@ -321,7 +396,7 @@ class _MathAppState extends State<MathApp> {
                 Align(alignment: Alignment(0.8, 0.0), child: Text("🐈‍⬛", style: TextStyle(fontSize: 50))),
                 AnimatedAlign(
                   duration: Duration(milliseconds: 600),
-                  alignment: Alignment(-0.8 + (progress * 1.55), 0.0),
+                  alignment: Alignment(-0.8 + (progress * 1.4), 0.0),
                   child: Transform.flip(flipX: true, child: Text("🐈", style: TextStyle(fontSize: 35))),
                 ),
               ],

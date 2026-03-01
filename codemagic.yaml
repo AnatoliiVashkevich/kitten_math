@@ -1,0 +1,19 @@
+workflows:
+  ios-release:
+    name: iOS Release Build
+    max_build_duration: 30
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+      xcode: latest
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Flutter build iOS
+        script: |
+          # Собираем билд без подписи (так как у нас нет Mac для локальной подписи)
+          # Это позволит Codemagic создать нераспространяемый билд или подготовить его к Sideloadly
+          flutter build ios --release --no-codesign
+    artifacts:
+      - build/ios/iphoneos/*.app
