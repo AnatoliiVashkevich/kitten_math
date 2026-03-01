@@ -15,7 +15,7 @@ class MathApp extends StatefulWidget {
 class _MathAppState extends State<MathApp> {
   String screen = 'start';
   String operation = "Сложение";
-  String difficulty = "Легко";
+  String difficulty = "Студент"; // Изменено значение по умолчанию
   String currentLang = "RU";
 
   final List<String> kittenEmojis = ["🐱", "😺", "😽", "🐈", "🐾"];
@@ -24,7 +24,7 @@ class _MathAppState extends State<MathApp> {
     "RU": {
       "title": "ПОМОГИ КОТЕНКУ",
       "subtitle": "Выберите тип примеров:",
-      "diff": "Сложность:",
+      "diff": "Твой уровень мастерства:",
       "start": "НАЧАТЬ ПУТЬ",
       "steps": "Осталось шагов: ",
       "win": "СЕМЬЯ ВМЕСТЕ!",
@@ -42,12 +42,12 @@ class _MathAppState extends State<MathApp> {
       "support4": "Почти в точку! Еще один шаг и ты мастер!",
       "support5": "Ничего страшного! Котенок поддерживает тебя!",
       "Сложение": "Сложение", "Вычитание": "Вычитание", "Умножение": "Умножение", "Деление": "Деление",
-      "Легко": "Легко", "Средне": "Средне", "Сложно": "Сложно",
+      "Студент": "Студент", "Профессор": "Профессор", "Искусственный Интеллект": "Искусственный Интеллект",
     },
     "EN": {
       "title": "HELP THE KITTEN",
       "subtitle": "Choose operation:",
-      "diff": "Difficulty:",
+      "diff": "Your skill level:",
       "start": "START JOURNEY",
       "steps": "Steps left: ",
       "win": "FAMILY REUNITED!",
@@ -65,7 +65,7 @@ class _MathAppState extends State<MathApp> {
       "support4": "Almost there! One more step and you're a master!",
       "support5": "Don't worry! The kitten is cheering for you!",
       "Сложение": "Addition", "Вычитание": "Subtraction", "Умножение": "Multiplication", "Деление": "Division",
-      "Легко": "Easy", "Средне": "Medium", "Сложно": "Hard",
+      "Студент": "Student", "Профессор": "Professor", "Искусственный Интеллект": "A.I. Master",
     }
   };
 
@@ -95,7 +95,8 @@ class _MathAppState extends State<MathApp> {
 
   void generateExample() {
     var rng = Random();
-    int range1 = (difficulty == "Легко") ? 10 : (difficulty == "Средне" ? 31 : 101);
+    // Логика сложности: Студент (до 10), Профессор (до 30), ИИ (до 100)
+    int range1 = (difficulty == "Студент") ? 10 : (difficulty == "Профессор" ? 31 : 101);
     
     if (operation == "Умножение" || operation == "Деление") {
       num2 = rng.nextInt(10); 
@@ -137,8 +138,6 @@ class _MathAppState extends State<MathApp> {
     final random = Random();
     String randomEmoji = kittenEmojis[random.nextInt(kittenEmojis.length)];
     String randomPhrase = t("support${random.nextInt(5) + 1}");
-    
-    // Новое улучшение: показываем полный пример с ответом
     String fullResult = "$num1 ${getOpSymbol()} $num2 = ${getCorrectAnswer()}";
 
     showDialog(
@@ -245,6 +244,7 @@ class _MathAppState extends State<MathApp> {
       backgroundColor: Colors.orange[50],
       body: Center(
         child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(vertical: 20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -276,7 +276,7 @@ class _MathAppState extends State<MathApp> {
               Wrap(
                 alignment: WrapAlignment.center,
                 spacing: 10,
-                children: ["Легко", "Средне", "Сложно"].map((d) => choiceChip(d, isOp: false)).toList(),
+                children: ["Студент", "Профессор", "Искусственный Интеллект"].map((d) => choiceChip(d, isOp: false)).toList(),
               ),
               SizedBox(height: 40),
               ElevatedButton(
